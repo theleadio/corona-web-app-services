@@ -1,0 +1,12 @@
+timeout: 1800s
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/kttranslation:$TAG_NAME', '.']
+  id: 'build-gcr'
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/$PROJECT_ID/kttranslation:$TAG_NAME']
+  id: 'push-gcr'
+  waitFor:
+  - 'build-gcr'
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: ['beta', 'run', 'deploy', 'corona-services', '--image', 'gcr.io/$PROJECT_ID/kttranslation:$TAG_NAME', '--region', 'asia-northeast1', '--platform', 'managed', '--memory', '512Mi', '--set-env-vars', 'NODE_ENV=production', '--set-cloudsql-instances', 'ktbmsystem:asia-east1:kt-system-pgsql-11', '--allow-unauthenticated']
